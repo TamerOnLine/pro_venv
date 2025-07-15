@@ -1,5 +1,11 @@
 # Project Scaffold
 
+![Release](https://img.shields.io/github/v/release/tameronline/python-scaffold?style=flat-square)
+![License](https://img.shields.io/github/license/tameronline/python-scaffold?style=flat-square)
+
+
+
+
 🚀 This Python project was automatically set up using `pro_venv.py`.
 
 ## 🗂️ Project Structure
