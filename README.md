@@ -1,9 +1,11 @@
 # Project Scaffold
 
+![Build](https://github.com/TamerOnLine/pro_venv/actions/workflows/test-pro_venv.yml/badge.svg)
 ![Release](https://img.shields.io/github/v/release/TamerOnLine/pro_venv?style=flat-square)
 ![License](https://img.shields.io/github/license/TamerOnLine/pro_venv?style=flat-square)
 
 🚀 This Python project was automatically set up using `pro_venv.py`.
+
 
 
 ## 🗂️ Project Structure
