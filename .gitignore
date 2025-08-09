@@ -1,153 +1,97 @@
-# =========================
-# 🧠 Python: Bytecode, Caches, Compiled Files
-# =========================
+# =======================================================
+# .gitignore — Python backend (FastAPI/Flask/Alembic)
+# with optional frontend tooling (Node.js)
+# =======================================================
+#
+# NOTE: Lock files (Pipfile.lock, poetry.lock, pdm.lock, uv.lock,
+#       package-lock.json, pnpm-lock.yaml, yarn.lock) are intentionally
+#       NOT ignored to ensure reproducible builds.
+#       Track them unless you have a strong reason not to.
+#
+# -------------------------------------------------------
+# 1) Python bytecode, caches, compiled artifacts
+# -------------------------------------------------------
 __pycache__/
 *.py[cod]
 *$py.class
 *.so
-*.sage.py
-*.manifest
-*.spec
 cython_debug/
 
-# =========================
-# ⚙️ Virtual Environments
-# =========================
-.env
-.venv
-env/
+# -------------------------------------------------------
+# 2) Virtual environments / Python package metadata
+# -------------------------------------------------------
+.venv/
 venv/
-venv*/
+env/
 ENV/
-env.bak/
-venv.bak/
-.pdm-python
-.pdm-build/
-__pypackages__/
-
-# =========================
-# 📦 Package/Build Artifacts
-# =========================
-.Python
-build/
-develop-eggs/
-dist/
-downloads/
-eggs/
-.eggs/
-lib/
-lib64/
-parts/
-sdist/
-var/
-wheels/
-share/python-wheels/
-*.egg-info/
-.installed.cfg
+.conda/
+pip-wheel-metadata/
 *.egg
-MANIFEST
+*.egg-info/
+.eggs/
+.installed.cfg
 
-# =========================
-# 📄 Installer Logs
-# =========================
-pip-log.txt
-pip-delete-this-directory.txt
+# -------------------------------------------------------
+# 3) Build / distribution
+# -------------------------------------------------------
+build/
+dist/
+wheelhouse/
 
-# =========================
-# 🧪 Testing / Coverage
-# =========================
-htmlcov/
+# -------------------------------------------------------
+# 4) Testing & coverage
+# -------------------------------------------------------
+.pytest_cache/
 .tox/
 .nox/
 .coverage
 .coverage.*
-.cache
+htmlcov/
 nosetests.xml
 coverage.xml
 *.cover
-*.py,cover
 .hypothesis/
-.pytest_cache/
-
-# =========================
-# 🌍 Translations
-# =========================
-*.mo
-*.pot
-
-# =========================
-# 🌐 Django / Flask / Scrapy
-# =========================
-*.log
-local_settings.py
-db.sqlite3
-db.sqlite3-journal
-instance/
-.webassets-cache
-.scrapy
-
-# =========================
-# 📚 Documentation
-# =========================
-docs/_build/
-.site
-.pybuilder/
-target/
 .mypy_cache/
-.dmypy.json
-dmypy.json
 .pytype/
 .pyre/
-.ruff_cache/
+.pyright/
+.cache/  # pytest and other tool caches
 
-# =========================
-# 🧪 IDE / Editor Configs
-# =========================
-.vscode/
-.idea/
-.spyderproject
-.spyproject
-.ropeproject
+# -------------------------------------------------------
+# 5) Notebooks
+# -------------------------------------------------------
+.ipynb_checkpoints/
 
-# =========================
-# 📓 Jupyter / IPython
-# =========================
-.ipynb_checkpoints
-profile_default/
-ipython_config.py
+# -------------------------------------------------------
+# 6) Logs & temp
+# -------------------------------------------------------
+*.log
+*.tmp
+tmp/
+temp/
 
-# =========================
-# 🔧 pyenv / Poetry / Pipenv / PDM / UV
-# =========================
-.python-version
-# Pipfile.lock
-# poetry.lock
-# pdm.lock
-.pdm.toml
-# uv.lock
+# -------------------------------------------------------
+# 7) Databases (generic + project-specific)
+# -------------------------------------------------------
+*.db
+*.sqlite
+*.sqlite3
+*.db-journal
+*.sqlite3-*
+projects.db
 
-# =========================
-# 🧵 Celery
-# =========================
-celerybeat-schedule
-celerybeat.pid
+# -------------------------------------------------------
+# 8) Environment / secrets
+# -------------------------------------------------------
+.env
+.env.*
+.envrc
+.direnv/
 
-# =========================
-# 🧠 AI Editors / Tools
-# =========================
-.abstra/
-.cursorignore
-.cursorindexingignore
-
-# =========================
-# 🔐 Private / Config Files
-# =========================
-.pypirc
-*.code-workspace
-
-# =========================
-# 🧾 user-specific files
-# =========================
+# -------------------------------------------------------
+# 9) Project-specific generated files
+# -------------------------------------------------------
+serve-config.json
 gitingest.txt
 *info/
 publish.py
@@ -155,21 +99,55 @@ publish_test.py
 venv_switcher.py
 summary_tree.txt
 Dev_requirements.txt
+env-info.txt
 *.exe
 
-# =========================
-# Local cache from the app
-# =========================
-.cache/
+# -------------------------------------------------------
+# 10) Optional frontend (Node.js, bundlers)
+# -------------------------------------------------------
+node_modules/
+.pnp.*
+.yarn/
+.yarnrc*
+.npm/
+.pnpm-store/
+pnpm-debug.log*
+yarn-error.log*
+.npmrc
+.eslintcache
+.parcel-cache/
+.vite/
+.next/
+.nuxt/
+.turbo/
+*.tsbuildinfo
 
-# =========================
-# OS junk
-# =========================
+# -------------------------------------------------------
+# 11) Editors / IDEs
+# -------------------------------------------------------
+.vscode/
+.idea/
+*.iml
+.spyproject
+.ropeproject
+
+# Uncomment if you prefer to ignore Cursor configs.
+# Otherwise, keep them tracked to share rules with the team.
+# .cursorignore
+# .cursorindexingignore
+
+# -------------------------------------------------------
+# 12) OS-specific
+# -------------------------------------------------------
+# macOS
 .DS_Store
+.AppleDouble
+.LSOverride
+
+# Windows
 Thumbs.db
+ehthumbs.db
+Desktop.ini
 
-# =========================
-# Generated env info 
-# =========================
-env-info.txt
-
+# Linux
+*~
