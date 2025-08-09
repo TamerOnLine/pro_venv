@@ -3,6 +3,9 @@ import os
 import sys
 import subprocess
 import json
+import argparse
+from pathlib import Path
+import textwrap
 
 
 def create_vscode_files(venv_dir):
@@ -268,9 +271,82 @@ def create_app_file(app_file_path):
         print(f"{app_file_path} already exists.")
 
 
+def ensure_gh_actions_workflow(path=".github/workflows/test-pro_venv.yml", *, py="3.12", force=False, backup=True) -> str:
+    """
+    Create or overwrite a minimal GitHub Actions workflow that runs pro_venv.py.
+
+    Args:
+        path (str): Target workflow path.
+        py (str): Python version for the CI runner.
+        force (bool): Overwrite if file exists.
+        backup (bool): Create .bak backup before overwrite.
+
+    Returns:
+        str: "created", "overwritten", or "exists".
+    """
+    repo_root = Path(__file__).resolve().parent
+    wf_path = Path(path)
+    if not wf_path.is_absolute():
+        wf_path = repo_root / wf_path
+    wf_path.parent.mkdir(parents=True, exist_ok=True)
+
+    if wf_path.exists() and not force:
+        return "exists"
+
+    if wf_path.exists() and backup:
+        bak = wf_path.with_suffix(wf_path.suffix + ".bak")
+        bak.write_text(wf_path.read_text(encoding="utf-8"), encoding="utf-8")
+
+    yml = textwrap.dedent(f"""    name: Test pro_venv.py
+
+    on: [push, pull_request]
+
+    jobs:
+      run-script:
+        runs-on: ubuntu-latest
+        steps:
+          - name: Checkout repository
+            uses: actions/checkout@v4
+
+          - name: Set up Python
+            uses: actions/setup-python@v4
+            with:
+              python-version: "{py}"
+
+          - name: Install minimal requirements (if any)
+            run: |
+              python -m pip install --upgrade pip
+
+          - name: Run pro_venv.py
+            run: |
+              python pro_venv.py
+    """)
+    wf_path.write_text(yml, encoding="utf-8")
+    return "overwritten" if force else "created"
+
+
 if __name__ == "__main__":
+    # CLI options for CI workflow generation
+    parser = argparse.ArgumentParser(description="Project setup and CI generator")
+    parser.add_argument(
+        "--ci",
+        choices=["skip", "create", "force"],
+        default="skip",
+        help="Create GitHub Actions workflow (.github/workflows/test-pro_venv.yml)."
+    )
+    parser.add_argument(
+        "--ci-python",
+        default="3.12",
+        help="Python version used in the CI (default: 3.12)."
+    )
+    args = parser.parse_args()
+
     print("\nStarting project setup...\n" + "-" * 40)
     config = load_or_create_config()
+    if args.ci in ("create", "force"):
+        status = ensure_gh_actions_workflow(py=args.ci_python, force=(args.ci == "force"))
+        print(f"[ci] {status}: .github/workflows/test-pro_venv.yml")
+
 
     venv_dir = config["venv_dir"]
     requirements_path = config["requirements_file"]
