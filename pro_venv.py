@@ -326,6 +326,12 @@ def ensure_gh_actions_workflow(path=".github/workflows/test-pro_venv.yml", *, py
 
 
 if __name__ == "__main__":
+    # Validate that this script is executed from the project root.
+    # It compares CWD to the directory containing this file.
+    if Path.cwd() != Path(__file__).resolve().parent:
+        print("Run the script from the project root.")
+        sys.exit(1)
+
     # CLI options for CI workflow generation
     parser = argparse.ArgumentParser(description="Project setup and CI generator")
     parser.add_argument(
@@ -347,7 +353,6 @@ if __name__ == "__main__":
         status = ensure_gh_actions_workflow(py=args.ci_python, force=(args.ci == "force"))
         print(f"[ci] {status}: .github/workflows/test-pro_venv.yml")
 
-
     venv_dir = config["venv_dir"]
     requirements_path = config["requirements_file"]
     main_file = config["main_file"]
@@ -355,14 +360,12 @@ if __name__ == "__main__":
 
     create_virtualenv(venv_dir, python_version)
     create_requirements_file(requirements_path)
-    # Prefer upgrading pip before installing deps
     upgrade_pip(venv_dir)
     install_requirements(venv_dir, requirements_path)
     create_env_info(venv_dir)
 
     entry_point = config.get("entry_point", "main.py")
     create_main_file(entry_point, venv_dir)
-
     create_app_file(main_file)
     create_vscode_files(venv_dir)
 
