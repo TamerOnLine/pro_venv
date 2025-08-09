@@ -1,3 +1,4 @@
+
 import os
 import sys
 import subprocess
@@ -5,7 +6,7 @@ import json
 
 
 def create_vscode_files(venv_dir):
-    """
+    '''
     Create VS Code configuration files including settings.json, launch.json, and a workspace file.
 
     Args:
@@ -18,7 +19,7 @@ def create_vscode_files(venv_dir):
 
     Notes:
         - Uses correct python interpreter path on Windows/Linux/macOS.
-    """
+    '''
     print("\n[8] Creating VS Code files: settings, launch, workspace")
 
     vscode_dir = os.path.join(os.getcwd(), ".vscode")
@@ -40,6 +41,7 @@ def create_vscode_files(venv_dir):
         "python.defaultInterpreterPath": interp,
         "python.terminal.activateEnvironment": True,
         "editor.formatOnSave": True,
+        # Old setting kept for compatibility; feel free to switch to ms-python.black-formatter later
         "python.formatting.provider": "black",
     }
     with open(settings_path, "w", encoding="utf-8") as f:
@@ -78,12 +80,12 @@ def create_vscode_files(venv_dir):
 
 
 def load_or_create_config():
-    """
+    '''
     Load or create the setup-config.json file.
 
     Returns:
         dict: The configuration loaded from or written to setup-config.json.
-    """
+    '''
     print("\n[1] Setting up setup-config.json")
     config_path = os.path.join(os.getcwd(), "setup-config.json")
 
@@ -108,13 +110,13 @@ def load_or_create_config():
 
 
 def create_virtualenv(venv_dir, python_version=None):
-    """
+    '''
     Create a virtual environment using the current Python interpreter.
 
     Args:
         venv_dir (str): Directory path for the virtual environment.
         python_version (str, optional): Target Python version (unused).
-    """
+    '''
     print("\n[2] Checking virtual environment")
     if not os.path.exists(venv_dir):
         print(f"Creating virtual environment at: {venv_dir}")
@@ -125,12 +127,12 @@ def create_virtualenv(venv_dir, python_version=None):
 
 
 def create_requirements_file(path):
-    """
+    '''
     Create a default requirements.txt if it doesn't exist.
 
     Args:
         path (str): File path for requirements.txt.
-    """
+    '''
     print("\n[3] Checking requirements.txt")
     if not os.path.exists(path):
         print("Creating empty requirements.txt...")
@@ -141,117 +143,105 @@ def create_requirements_file(path):
         print("requirements.txt already exists.")
 
 
+def _venv_python(venv_dir: str) -> str:
+    return (
+        os.path.join(venv_dir, "Scripts", "python.exe")
+        if os.name == "nt"
+        else os.path.join(venv_dir, "bin", "python")
+    )
+
+
 def install_requirements(venv_dir, requirements_path):
-    """
+    '''
     Install packages from requirements.txt.
 
     Args:
         venv_dir (str): Directory path for the virtual environment.
         requirements_path (str): Path to requirements.txt file.
-    """
+    '''
     print("\n[4] Installing requirements")
-    pip_path = (
-        os.path.join(venv_dir, "Scripts", "pip.exe")
-        if os.name == "nt"
-        else os.path.join(venv_dir, "bin", "pip")
+    py = _venv_python(venv_dir)
+    subprocess.run(
+        [py, "-m", "pip", "install", "-r", requirements_path, "--upgrade-strategy", "only-if-needed"],
+        check=True,
     )
-    subprocess.run([pip_path, "install", "-r", requirements_path], check=True)
     print("Packages installed.")
 
 
 def upgrade_pip(venv_dir):
-    """
+    '''
     Upgrade pip inside the virtual environment.
 
     Args:
         venv_dir (str): Directory path for the virtual environment.
-    """
+    '''
     print("\n[5] Upgrading pip")
-    python_path = (
-        os.path.join(venv_dir, "Scripts", "python.exe")
-        if os.name == "nt"
-        else os.path.join(venv_dir, "bin", "python")
-    )
-    subprocess.run([python_path, "-m", "pip", "install", "--upgrade", "pip"], check=True)
+    py = _venv_python(venv_dir)
+    subprocess.run([py, "-m", "pip", "install", "--upgrade", "pip"], check=True)
     print("pip upgraded.")
 
 
 def create_env_info(venv_dir):
-    """
+    '''
     Save basic information about the virtual environment.
 
     Args:
         venv_dir (str): Directory path for the virtual environment.
-    """
+    '''
     print("\n[6] Creating env-info.txt")
     info_path = "env-info.txt"
-    python_path = (
-        os.path.join(venv_dir, "Scripts", "python.exe")
-        if os.name == "nt"
-        else os.path.join(venv_dir, "bin", "python")
-    )
+    py = _venv_python(venv_dir)
     with open(info_path, "w", encoding="utf-8") as f:
-        subprocess.run([python_path, "--version"], stdout=f)
+        subprocess.run([py, "--version"], stdout=f)
         f.write("\nInstalled packages:\n")
-        subprocess.run([python_path, "-m", "pip", "freeze"], stdout=f)
+        subprocess.run([py, "-m", "pip", "freeze"], stdout=f)
     print(f"Environment info saved to {info_path}")
 
 
 def create_main_file(main_file_path, venv_dir):
-    """
-    Create main.py with virtualenv activation and dynamic script execution.
+    '''
+    Create main.py with v2 safe launcher (re-exec into venv, then run app.py).
 
     Args:
         main_file_path (str): Path to main.py file.
         venv_dir (str): Directory path for the virtual environment.
-    """
+    '''
     print("\n[7] Checking main.py")
     if not os.path.exists(main_file_path):
         print(f"Creating {main_file_path}...")
 
-        # Build the embedded script with dynamic site-packages detection
+        # Safer main: re-exec inside venv, then run app.py as a subprocess
         main_code = f'''
-import os
-import sys
-import json
+# PRO_VENV_MAIN=v2
+import os, sys, json, subprocess
 
-# Activate the virtual environment (embedded)
-base_dir = os.path.dirname(__file__)
-if os.name == "nt":
-    venv_site_packages = os.path.join(base_dir, r"{venv_dir}", "Lib", "site-packages")
-else:
-    pyver = "python" + str(sys.version_info[0]) + "." + str(sys.version_info[1])
-    venv_site_packages = os.path.join(base_dir, r"{venv_dir}", "lib", pyver, "site-packages")
+BASE = os.path.dirname(__file__)
+VENV_PY = os.path.join(BASE, r"{venv_dir}", "Scripts", "python.exe") if os.name == "nt" else os.path.join(BASE, r"{venv_dir}", "bin", "python")
 
-if os.path.isdir(venv_site_packages) and venv_site_packages not in sys.path:
-    sys.path.insert(0, venv_site_packages)
-
-print("Virtual environment activated within script.")
-print("sys.path includes:", venv_site_packages)
-
-# Load configuration from config file for flexibility
-CONFIG_FILE = "setup-config.json"
-
-def load_entry_point():
-    if not os.path.exists(CONFIG_FILE):
-        print(f"{{CONFIG_FILE}} not found.")
+def _load_cfg():
+    cfg_path = os.path.join(BASE, "setup-config.json")
+    if not os.path.exists(cfg_path):
+        print("setup-config.json not found.")
         sys.exit(1)
+    with open(cfg_path, "r", encoding="utf-8") as f:
+        return json.load(f)
 
-    with open(CONFIG_FILE, "r", encoding="utf-8") as f:
-        config = json.load(f)
-
-    main_file = config.get("main_file", "app.py")
-    if not os.path.exists(main_file):
-        print(f"{{main_file}} does not exist.")
+# Ensure we run inside the venv; fail fast if missing
+if os.path.abspath(sys.executable) != os.path.abspath(VENV_PY):
+    if not os.path.exists(VENV_PY):
+        print("venv interpreter not found. Run: python pro_venv.py")
         sys.exit(1)
+    os.execv(VENV_PY, [VENV_PY, __file__])
 
-    print(f"Running: {{main_file}}")
-    with open(main_file, encoding="utf-8") as f:
-        code = compile(f.read(), main_file, "exec")
-        exec(code, globals())
+cfg = _load_cfg()
+app = cfg.get("main_file", "app.py")
+if not os.path.exists(app):
+    print(f"{{app}} does not exist.")
+    sys.exit(1)
 
-if __name__ == "__main__":
-    load_entry_point()
+print("Interpreter:", sys.executable)
+print("Running:", app)
+sys.exit(subprocess.call([sys.executable, app]))
 '''.lstrip()
 
         with open(main_file_path, "w", encoding="utf-8") as f:
@@ -262,18 +252,15 @@ if __name__ == "__main__":
 
 
 def create_app_file(app_file_path):
-    """
+    '''
     Create a simple app.py file with a welcome message if it does not exist.
     Args:
         app_file_path (str): Path to app.py or the main application file.
-    """
+    '''
     print("\n[7.1] Checking app.py")
     if not os.path.exists(app_file_path):
         print(f"Creating {app_file_path} with welcome message...")
-        welcome_code = '''\
-print("Welcome! This is your app.py file.")
-print("You can now start writing your application code here.")
-'''
+        welcome_code = 'print("Welcome! This is your app.py file.")\nprint("You can now start writing your application code here.")\n'
         with open(app_file_path, "w", encoding="utf-8") as f:
             f.write(welcome_code)
         print(f"{app_file_path} created.")
